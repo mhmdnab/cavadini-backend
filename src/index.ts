@@ -7,6 +7,7 @@ import authRouter from './routes/auth';
 import cartRouter from './routes/cart';
 import ordersRouter from './routes/orders';
 import newsletterRouter from './routes/newsletter';
+import adminRouter from './routes/admin';
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/cart', cartRouter);
 app.use('/api/orders', ordersRouter);
 app.use('/api/newsletter', newsletterRouter);
+app.use('/api/admin', adminRouter);
 
 const COLLECTIONS = [
   { label: 'All', slug: 'all' },

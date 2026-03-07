@@ -7,7 +7,7 @@ import authMiddleware from '../middleware/auth';
 const router = Router();
 
 const signToken = (user: IUser): string =>
-  jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET as string, { expiresIn: '7d' });
+  jwt.sign({ id: user._id, email: user.email, isAdmin: user.isAdmin }, process.env.JWT_SECRET as string, { expiresIn: '7d' });
 
 // POST /api/auth/register
 router.post('/register', async (req: Request, res: Response) => {
@@ -30,7 +30,7 @@ router.post('/register', async (req: Request, res: Response) => {
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await User.create({ name, email, passwordHash });
     const token = signToken(user);
-    res.status(201).json({ token, user: { id: user._id, name: user.name, email: user.email } });
+    res.status(201).json({ token, user: { id: user._id, name: user.name, email: user.email, isAdmin: user.isAdmin } });
   } catch {
     res.status(500).json({ message: 'Server error' });
   }
@@ -57,7 +57,7 @@ router.post('/login', async (req: Request, res: Response) => {
     }
 
     const token = signToken(user);
-    res.json({ token, user: { id: user._id, name: user.name, email: user.email } });
+    res.json({ token, user: { id: user._id, name: user.name, email: user.email, isAdmin: user.isAdmin } });
   } catch {
     res.status(500).json({ message: 'Server error' });
   }
