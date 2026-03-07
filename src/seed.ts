@@ -1,0 +1,280 @@
+import 'dotenv/config';
+import mongoose from 'mongoose';
+import Product from './models/Product';
+
+const products = [
+  // ─── Royale Collection ────────────────────────────────────────────────────
+  {
+    id: 1,
+    name: 'Royale Perpetuel',
+    collection: 'Royale Collection',
+    collectionSlug: 'royale',
+    price: 'CHF 28,500',
+    priceValue: 28500,
+    ref: 'CV-R1952',
+    movement: 'In-house Cal. 890 · Perpetual Calendar',
+    gradient: 'linear-gradient(135deg, #1A1400 0%, #2C2000 40%, #0D0A00 100%)',
+    tagline: 'The architecture of time, perfected.',
+    description:
+      'The Royale Perpetuel is the cornerstone of our heritage. A masterpiece of grand complication watchmaking, its perpetual calendar mechanism requires no manual correction until the year 2100.',
+    caseDiameter: '42 mm',
+    caseHeight: '11.2 mm',
+    caseMaterial: '18k Rose Gold',
+    bracelet: 'Alligator leather, gold deployant clasp',
+    waterResistance: '50 m',
+    powerReserve: '72 hours',
+    frequency: '28,800 vph (4 Hz)',
+    jewels: '37 jewels',
+    functions: ['Hours, Minutes, Seconds', 'Perpetual Calendar', 'Moon Phase', 'Power Reserve Indicator'],
+    features: [
+      { title: 'Perpetual Calendar', body: 'The Cal. 890 perpetual calendar module accounts for short months and leap years automatically, requiring no correction until 2100.' },
+      { title: 'Moon Phase', body: 'A precision moon phase display accurate to one day every 122 years, finished with a hand-engraved stellar sky.' },
+      { title: 'Geneva Stripes', body: 'Every surface is finished by hand — bridges decorated with Côtes de Genève, bevelled edges polished to a mirror finish.' },
+    ],
+  },
+  {
+    id: 2,
+    name: 'Royale Skeleton',
+    collection: 'Royale Collection',
+    collectionSlug: 'royale',
+    price: 'CHF 34,000',
+    priceValue: 34000,
+    ref: 'CV-R2240',
+    movement: 'In-house Cal. 891S · Skeletonised',
+    gradient: 'linear-gradient(135deg, #1F1600 0%, #332200 50%, #0F0B00 100%)',
+    tagline: 'The soul of the movement, laid bare.',
+    description:
+      'The Royale Skeleton reveals the entire architecture of the Cal. 891S movement. Every bridge, wheel, and spring is exposed and finished by hand to museum quality.',
+    caseDiameter: '41 mm',
+    caseHeight: '10.8 mm',
+    caseMaterial: '18k Yellow Gold',
+    bracelet: 'Alligator leather, gold pin buckle',
+    waterResistance: '30 m',
+    powerReserve: '68 hours',
+    frequency: '21,600 vph (3 Hz)',
+    jewels: '30 jewels',
+    functions: ['Hours, Minutes', 'Skeletonised Display'],
+    features: [
+      { title: 'Hand-Skeletonised Movement', body: 'Over 200 hours of hand work transforms the Cal. 891 into a transparent canvas of mechanical art.' },
+      { title: 'Double Mainspring Barrel', body: 'Two barrels in series provide a 68-hour power reserve with exceptional torque consistency.' },
+      { title: 'Sapphire Case Back', body: 'A double-sided sapphire crystal case back allows the movement to be admired from both sides.' },
+    ],
+  },
+  {
+    id: 3,
+    name: 'Royale Grande Date',
+    collection: 'Royale Collection',
+    collectionSlug: 'royale',
+    price: 'CHF 21,800',
+    priceValue: 21800,
+    ref: 'CV-R0318',
+    movement: 'In-house Cal. 886 · Grande Date',
+    gradient: 'linear-gradient(135deg, #160F00 0%, #261800 50%, #0A0700 100%)',
+    tagline: 'Clarity in every detail.',
+    description:
+      'The Grande Date display of the Royale presents the date in a bold, oversized aperture that redefines legibility in haute horlogerie.',
+    caseDiameter: '40 mm',
+    caseHeight: '9.6 mm',
+    caseMaterial: 'Stainless Steel',
+    bracelet: 'Integrated steel bracelet',
+    waterResistance: '100 m',
+    powerReserve: '60 hours',
+    frequency: '28,800 vph (4 Hz)',
+    jewels: '28 jewels',
+    functions: ['Hours, Minutes, Seconds', 'Grande Date'],
+    features: [
+      { title: 'Oversized Date', body: "Two separate discs display tens and units digits independently, creating a crisp, legible date at 12 o'clock." },
+      { title: 'Integrated Bracelet', body: 'The seamless transition from case to bracelet is machined from a single block of 904L steel.' },
+      { title: 'Anti-reflective Sapphire', body: 'Double anti-reflective treatment on both inner and outer surfaces ensures perfect legibility in all light.' },
+    ],
+  },
+  // ─── Noir Collection ──────────────────────────────────────────────────────
+  {
+    id: 4,
+    name: 'Noir Tourbillon',
+    collection: 'Noir Collection',
+    collectionSlug: 'noir',
+    price: 'CHF 54,000',
+    priceValue: 54000,
+    ref: 'CV-N0824',
+    movement: 'In-house Cal. 120 · Flying Tourbillon',
+    gradient: 'linear-gradient(135deg, #050510 0%, #0A0A1A 40%, #020208 100%)',
+    tagline: 'Defying gravity. Defying convention.',
+    description:
+      "The Noir Tourbillon is Cavadini's most technically ambitious creation. A one-minute flying tourbillon floats at 6 o'clock, cancelling the effects of gravity on the escapement with absolute precision.",
+    caseDiameter: '43 mm',
+    caseHeight: '13.5 mm',
+    caseMaterial: 'Titanium DLC',
+    bracelet: 'Black rubber with titanium deployant',
+    waterResistance: '100 m',
+    powerReserve: '80 hours',
+    frequency: '21,600 vph (3 Hz)',
+    jewels: '22 jewels',
+    functions: ['Hours, Minutes', 'Flying Tourbillon', 'Power Reserve Indicator'],
+    features: [
+      { title: 'Flying Tourbillon', body: 'Without the upper bridge concealing the mechanism, the tourbillon cage appears to float freely within the dial.' },
+      { title: 'Titanium DLC Case', body: 'Diamond-Like Carbon coating achieves extreme scratch resistance and a matte black aesthetic, reducing case weight to just 68g.' },
+      { title: '80-Hour Power Reserve', body: 'Three mainspring barrels deliver an exceptional 80-hour autonomy, ensuring reliability over long weekends.' },
+    ],
+  },
+  {
+    id: 5,
+    name: 'Noir Automatique',
+    collection: 'Noir Collection',
+    collectionSlug: 'noir',
+    price: 'CHF 16,500',
+    priceValue: 16500,
+    ref: 'CV-N1120',
+    movement: 'In-house Cal. 115 · Automatic',
+    gradient: 'linear-gradient(135deg, #080812 0%, #0C0C1E 50%, #040408 100%)',
+    tagline: 'Darkness refined.',
+    description:
+      'The Noir Automatique is the entry point to our Noir family — and a statement piece in its own right.',
+    caseDiameter: '40 mm',
+    caseHeight: '9.8 mm',
+    caseMaterial: 'Black PVD Steel',
+    bracelet: 'Black alligator leather',
+    waterResistance: '100 m',
+    powerReserve: '55 hours',
+    frequency: '28,800 vph (4 Hz)',
+    jewels: '26 jewels',
+    functions: ['Hours, Minutes, Seconds', 'Date'],
+    features: [
+      { title: 'All-Black Aesthetic', body: 'Case, crown, and buckle are all treated with Physical Vapour Deposition for a uniform, deep black that resists wear.' },
+      { title: 'Blued Hands', body: 'The hands are thermally blued by hand, creating a vivid contrast against the matte black dial.' },
+      { title: 'Micro-Rotor', body: 'A discreet micro-rotor winds the movement without obscuring the dial architecture.' },
+    ],
+  },
+  {
+    id: 6,
+    name: 'Noir Chronographe',
+    collection: 'Noir Collection',
+    collectionSlug: 'noir',
+    price: 'CHF 24,900',
+    priceValue: 24900,
+    ref: 'CV-N0720',
+    movement: 'In-house Cal. 118C · Integrated Chronograph',
+    gradient: 'linear-gradient(135deg, #060610 0%, #0E0E20 50%, #030308 100%)',
+    tagline: 'Measure every moment.',
+    description:
+      'The Noir Chronographe houses our lateral clutch integrated chronograph — a mechanism developed over four years to achieve instantaneous start with zero recoil on the running seconds.',
+    caseDiameter: '41 mm',
+    caseHeight: '12.2 mm',
+    caseMaterial: 'Ceramic & Titanium',
+    bracelet: 'Integrated titanium bracelet',
+    waterResistance: '100 m',
+    powerReserve: '65 hours',
+    frequency: '36,000 vph (5 Hz)',
+    jewels: '33 jewels',
+    functions: ['Hours, Minutes, Seconds', 'Chronograph', '60-minute counter', '12-hour counter'],
+    features: [
+      { title: 'Lateral Clutch', body: 'Our proprietary lateral clutch couples the chronograph seconds hand with zero recoil.' },
+      { title: '5 Hz Frequency', body: 'At 36,000 vibrations per hour, the chronograph measures to 1/10th of a second with exceptional accuracy.' },
+      { title: 'Ceramic Bezel', body: 'The black ceramic bezel is machined from a single block of sintered zirconium oxide — virtually unscratchable.' },
+    ],
+  },
+  // ─── Meridian Collection ──────────────────────────────────────────────────
+  {
+    id: 7,
+    name: 'Meridian Chronograph',
+    collection: 'Meridian Collection',
+    collectionSlug: 'meridian',
+    price: 'CHF 18,200',
+    priceValue: 18200,
+    ref: 'CV-M2310',
+    movement: 'In-house Cal. 565 · Integrated Chronograph',
+    gradient: 'linear-gradient(135deg, #0A1008 0%, #141E10 40%, #060C05 100%)',
+    tagline: 'Precision at every latitude.',
+    description:
+      'The Meridian Chronograph distils the essence of professional timekeeping into a watch that transitions effortlessly from boardroom to expedition.',
+    caseDiameter: '42 mm',
+    caseHeight: '11.8 mm',
+    caseMaterial: 'Grade 5 Titanium',
+    bracelet: 'Textile strap, titanium buckle',
+    waterResistance: '200 m',
+    powerReserve: '65 hours',
+    frequency: '28,800 vph (4 Hz)',
+    jewels: '31 jewels',
+    functions: ['Hours, Minutes, Seconds', 'Chronograph', 'Tachymeter'],
+    features: [
+      { title: 'Grade 5 Titanium', body: 'Aerospace-grade titanium is 40% lighter than steel, with superior corrosion resistance.' },
+      { title: '200m Water Resistance', body: 'A screwdown crown and reinforced case back guarantee water resistance to 200 metres, meeting ISO 6425 diver standards.' },
+      { title: 'Superluminova Indices', body: 'Grade X1 Superluminova on all hands and applied indices provides hours of legibility in complete darkness.' },
+    ],
+  },
+  {
+    id: 8,
+    name: 'Meridian GMT',
+    collection: 'Meridian Collection',
+    collectionSlug: 'meridian',
+    price: 'CHF 14,600',
+    priceValue: 14600,
+    ref: 'CV-M0416',
+    movement: 'In-house Cal. 560 · GMT',
+    gradient: 'linear-gradient(135deg, #081008 0%, #101C10 50%, #050A05 100%)',
+    tagline: 'Two worlds. One wrist.',
+    description:
+      'The Meridian GMT tracks two time zones simultaneously with an independently adjustable 24-hour hand.',
+    caseDiameter: '40 mm',
+    caseHeight: '10.4 mm',
+    caseMaterial: 'Stainless Steel',
+    bracelet: 'Steel Oyster-style bracelet',
+    waterResistance: '100 m',
+    powerReserve: '70 hours',
+    frequency: '28,800 vph (4 Hz)',
+    jewels: '28 jewels',
+    functions: ['Hours, Minutes, Seconds', 'GMT (Second Time Zone)', 'Date'],
+    features: [
+      { title: 'Independent GMT Hand', body: 'The 24-hour GMT hand adjusts independently of the local time display, allowing home time to be tracked without disrupting the hour hand.' },
+      { title: 'Bidirectional Bezel', body: 'A 24-hour graduated ceramic insert allows a third time zone to be tracked simultaneously.' },
+      { title: '70-Hour Autonomy', body: 'An enhanced barrel geometry provides 70 hours of power reserve.' },
+    ],
+  },
+  {
+    id: 9,
+    name: 'Meridian Aqua',
+    collection: 'Meridian Collection',
+    collectionSlug: 'meridian',
+    price: 'CHF 11,400',
+    priceValue: 11400,
+    ref: 'CV-M0812',
+    movement: 'In-house Cal. 550 · Automatic',
+    gradient: 'linear-gradient(135deg, #041010 0%, #081818 50%, #020808 100%)',
+    tagline: 'Born for the deep.',
+    description:
+      'The Meridian Aqua is our most robust timepiece — a professional diver rated to 300 metres.',
+    caseDiameter: '43 mm',
+    caseHeight: '13.0 mm',
+    caseMaterial: '316L Steel with ceramic bezel',
+    bracelet: 'Steel bracelet with wetsuit extension',
+    waterResistance: '300 m',
+    powerReserve: '55 hours',
+    frequency: '28,800 vph (4 Hz)',
+    jewels: '26 jewels',
+    functions: ['Hours, Minutes, Seconds', 'Unidirectional Elapsed Time Bezel', 'Date', 'Helium Escape Valve'],
+    features: [
+      { title: '300m Depth Rating', body: 'A reinforced case, screwdown crown, and helium escape valve achieve a 300-metre water resistance, ISO 6425 certified.' },
+      { title: 'Ceramic Unidirectional Bezel', body: 'The 60-click unidirectional bezel in polished black ceramic can only rotate counter-clockwise.' },
+      { title: 'Anti-Magnetic Shield', body: 'An inner soft-iron cage protects the movement from magnetic fields up to 1,000 gauss.' },
+    ],
+  },
+];
+
+async function seed(): Promise<void> {
+  await mongoose.connect(process.env.MONGO_URI as string);
+  console.log('Connected to MongoDB');
+
+  await Product.deleteMany({});
+  console.log('Cleared existing products');
+
+  await Product.insertMany(products);
+  console.log(`Seeded ${products.length} products`);
+
+  await mongoose.disconnect();
+  console.log('Done');
+}
+
+seed().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
