@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import Newsletter from '../models/Newsletter';
+import prisma from '../lib/prisma';
 
 const router = Router();
 
@@ -12,13 +12,13 @@ router.post('/subscribe', async (req: Request, res: Response) => {
       return;
     }
 
-    const existing = await Newsletter.findOne({ email });
+    const existing = await prisma.newsletter.findUnique({ where: { email } });
     if (existing) {
       res.status(409).json({ message: 'Already subscribed' });
       return;
     }
 
-    await Newsletter.create({ email });
+    await prisma.newsletter.create({ data: { email } });
     res.status(201).json({ message: 'Subscribed successfully' });
   } catch {
     res.status(500).json({ message: 'Server error' });
