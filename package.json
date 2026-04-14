@@ -13,10 +13,14 @@
     "db:studio": "prisma studio",
     "seed": "ts-node src/seed/index.ts",
     "seed:admin": "ts-node src/seedAdmin.ts",
-    "seed:kampfer": "ts-node scripts/seedKampferProducts.ts"
+    "seed:kampfer": "ts-node scripts/seedKampferProducts.ts",
+    "scrape:images": "node scripts/scrapeEbayImages.js",
+    "seed:images": "ts-node scripts/seedProductImages.ts",
+    "seed:images:supabase": "ts-node scripts/seedProductImages.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
+    "@supabase/supabase-js": "^2.103.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",

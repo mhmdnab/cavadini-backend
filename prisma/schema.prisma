@@ -102,6 +102,9 @@ model Product {
   safetyInfo                  String?
   packageContents             String?
 
+  // Images
+  images                  String[]
+
   // Watch-specific
   gender                  String?
   movement                String?

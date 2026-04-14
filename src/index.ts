@@ -2,6 +2,7 @@ import 'dotenv/config';
 import 'express-async-errors';
 import express, { Request, Response } from 'express';
 import cors from 'cors';
+import path from 'path';
 import prisma from './lib/prisma';
 import productsRouter from './routes/products';
 import categoriesRouter from './routes/categories';
@@ -23,6 +24,7 @@ const allowedOrigins = [
 ];
 app.use(cors({ origin: (origin, cb) => cb(null, !origin || allowedOrigins.includes(origin)) }));
 app.use(express.json());
+app.use('/images', express.static(path.join(__dirname, '..', 'public', 'images')));
 
 app.use('/api/products', productsRouter);
 app.use('/api/categories', categoriesRouter);
