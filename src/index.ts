@@ -38,6 +38,16 @@ app.use('/api/admin', adminRouter);
 
 app.get('/api/health', (_req: Request, res: Response) => res.json({ status: 'ok' }));
 
+// Debug endpoint to check images
+app.get('/api/debug/images', async (_req: Request, res: Response) => {
+  const products = await prisma.product.findMany({
+    select: { id, name, images: true },
+    where: { images: { isEmpty: false } },
+    take: 3,
+  });
+  res.json({ products });
+});
+
 app.use((_req: Request, res: Response) => res.status(404).json({ message: 'Route not found' }));
 
 app.use(errorHandler);
