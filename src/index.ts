@@ -40,12 +40,13 @@ app.get('/api/health', (_req: Request, res: Response) => res.json({ status: 'ok'
 
 // Debug endpoint to check images
 app.get('/api/debug/images', async (_req: Request, res: Response) => {
-  const products = await prisma.product.findMany({
-    select: { id, name, images: true },
-    where: { images: { isEmpty: false } },
-    take: 3,
+  const allProducts = await prisma.product.findMany({ take: 5 });
+  const withImages = allProducts.filter(p => p.images && p.images.length > 0);
+  res.json({ 
+    totalProducts: allProducts.length,
+    withImages: withImages.length,
+    sample: withImages.slice(0, 2).map(p => ({ id: p.id, name: p.name, images: p.images }))
   });
-  res.json({ products });
 });
 
 app.use((_req: Request, res: Response) => res.status(404).json({ message: 'Route not found' }));
