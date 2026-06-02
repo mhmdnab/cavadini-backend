@@ -83,6 +83,7 @@ model Product {
   category_type String
 
   referenceNumber String?
+  articleNumber   String?
   name            String
   description     String?
   price           Float
