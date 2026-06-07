@@ -31,6 +31,7 @@ model Category {
   id        String    @id @default(uuid())
   name      String
   slug      String    @unique
+  nameEn    String?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
@@ -62,6 +63,7 @@ model Theme {
   id         String   @id @default(uuid())
   name       String
   slug       String
+  nameEn     String?
   categoryId String
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -85,7 +87,9 @@ model Product {
   referenceNumber String?
   articleNumber   String?
   name            String
+  nameEn          String?
   description     String?
+  descriptionEn   String?
   price           Float
   originalPrice   Float?
   currency        String  @default("EUR")
@@ -99,9 +103,13 @@ model Product {
   warningContainsButtonCell   Boolean @default(false)
   weeeRegNumber               String?
   manufacturerInfo            String?
+  manufacturerInfoEn          String?
   responsiblePersonEU         String?
+  responsiblePersonEUEn       String?
   safetyInfo                  String?
+  safetyInfoEn                String?
   packageContents             String?
+  packageContentsEn           String?
 
   // Images
   images                  String[]
@@ -153,7 +161,9 @@ model Product {
   // Jewelry-specific (gender, style shared above)
   productType           String?
   shortDescription      String?
+  shortDescriptionEn    String?
   itemName              String?
+  itemNameEn            String?
   weightGrams           Float?
   style                 String?
   material              String?
