@@ -1,6 +1,10 @@
 node_modules/
 .env
+.env.development
+.env.*.local
 
 public/
 
 dist/
+
+*.dump

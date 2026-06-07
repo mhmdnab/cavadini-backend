@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:17
+    container_name: cavadini-dev-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: cavadini
+      POSTGRES_PASSWORD: cavadini
+      POSTGRES_DB: cavadini
+    ports:
+      - "5435:5432"
+    volumes:
+      - cavadini_dev_pg:/var/lib/postgresql/data
+
+volumes:
+  cavadini_dev_pg:
