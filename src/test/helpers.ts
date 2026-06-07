@@ -1,8 +1,27 @@
 import jwt from 'jsonwebtoken';
 import supertest from 'supertest';
 import app from '../app';
+import prisma from '../lib/prisma';
 
 export const api = supertest(app);
+
+/**
+ * Fetches a category by slug for use as a test fixture. The integration test
+ * suite runs against the dev DB cloned from prod (see Phase 0), which always
+ * contains the seed categories (watches, watch_straps, …). Throwing a clear,
+ * actionable error here turns a missing-clone misconfiguration into an obvious
+ * message instead of a cryptic assertion failure deep in a test.
+ */
+export async function categoryBySlug(slug: string) {
+  const cat = await prisma.category.findFirst({ where: { slug } });
+  if (!cat) {
+    throw new Error(
+      `Test prerequisite missing: category "${slug}" not found. ` +
+        `Tests require the dev DB cloned from prod (see Phase 0 of the backend plan).`,
+    );
+  }
+  return cat;
+}
 
 // Fail fast on misconfiguration: without this, jwt.sign(undefined) would mint
 // tokens that the middleware also "verifies" with undefined, so every protected

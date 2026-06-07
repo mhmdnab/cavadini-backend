@@ -1,6 +1,6 @@
 import { describe, it, expect, afterAll } from 'vitest';
 import prisma from '../lib/prisma';
-import { api, adminToken } from './helpers';
+import { api, adminToken, categoryBySlug } from './helpers';
 
 const created: string[] = [];
 afterAll(async () => {
@@ -9,14 +9,13 @@ afterAll(async () => {
 
 describe('bilingual product fields', () => {
   it('persists nameEn/descriptionEn via admin create', async () => {
-    const cat = await prisma.category.findFirst({ where: { slug: 'watches' } });
-    expect(cat).toBeTruthy();
+    const cat = await categoryBySlug('watches');
     const res = await api
       .post('/api/admin/products')
       .set('Authorization', `Bearer ${adminToken()}`)
       .send({
         category_type: 'watches',
-        categoryId: cat!.id,
+        categoryId: cat.id,
         name: 'Testuhr',
         nameEn: 'Test Watch',
         description: 'Beschreibung',
@@ -26,6 +25,7 @@ describe('bilingual product fields', () => {
     expect(res.status).toBe(201);
     expect(res.body.nameEn).toBe('Test Watch');
     expect(res.body.descriptionEn).toBe('Description');
+    expect(res.body.id).toBeTruthy();
     created.push(res.body.id);
   });
 });
