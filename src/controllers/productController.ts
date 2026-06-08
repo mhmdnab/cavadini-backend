@@ -244,6 +244,12 @@ export const createProduct = async (req: Request, res: Response) => {
 export const updateProduct = async (req: Request, res: Response) => {
   const { themes: themeIds, ...data } = req.body;
 
+  // Auto-resolve categoryId from category_type if not supplied (matches create)
+  if (!data.categoryId && data.category_type) {
+    const cat = await prisma.category.findFirst({ where: { slug: data.category_type } });
+    if (cat) data.categoryId = cat.id;
+  }
+
   if (data.price !== undefined && data.price <= 0) {
     throw new Error('Validation: Price must be greater than 0');
   }

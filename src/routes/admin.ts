@@ -1,10 +1,12 @@
 import { Router, Request, Response } from 'express';
+import { Prisma } from '@prisma/client';
 import prisma from '../lib/prisma';
 import adminMiddleware from '../middleware/admin';
 import adminImagesRouter from './adminImages';
 import adminBrandsRouter from './adminBrands';
 import adminCategoriesRouter from './adminCategories';
 import adminThemesRouter from './adminThemes';
+import { createProduct, updateProduct, deleteProduct } from '../controllers/productController';
 
 const router = Router();
 router.use(adminMiddleware);
@@ -42,7 +44,7 @@ router.get('/products', async (req: Request, res: Response) => {
   const { search, category_type, includeInactive, page: pageParam, limit: limitParam } =
     req.query as Record<string, string | undefined>;
 
-  const where: Record<string, unknown> = {};
+  const where: Prisma.ProductWhereInput = {};
   if (includeInactive !== 'true') where.isActive = true;
   if (category_type) where.category_type = category_type;
   if (search) {
@@ -74,85 +76,12 @@ router.get('/products', async (req: Request, res: Response) => {
   });
 });
 
-router.post('/products', async (req: Request, res: Response) => {
-  const { themes: themeIds, ...data } = req.body;
-
-  // Auto-resolve categoryId from category_type if not supplied directly
-  if (!data.categoryId && data.category_type) {
-    const cat = await prisma.category.findFirst({ where: { slug: data.category_type } });
-    if (cat) data.categoryId = cat.id;
-  }
-
-  if (data.price <= 0) throw new Error('Validation: Price must be greater than 0');
-  if (!data.isOnSale) delete data.originalPrice;
-
-  const product = await prisma.product.create({
-    data: {
-      ...data,
-      ...(themeIds?.length && {
-        productThemes: { create: themeIds.map((id: string) => ({ themeId: id })) },
-      }),
-    },
-    include: {
-      category: true,
-      brand: true,
-      productThemes: { include: { theme: true } },
-    },
-  });
-
-  res.status(201).json({
-    ...product,
-    themes: product.productThemes.map((pt) => pt.theme),
-    productThemes: undefined,
-  });
-});
-
-router.put('/products/:id', async (req: Request, res: Response) => {
-  const { themes: themeIds, ...data } = req.body;
-
-  // Auto-resolve categoryId from category_type if not supplied directly
-  if (!data.categoryId && data.category_type) {
-    const cat = await prisma.category.findFirst({ where: { slug: data.category_type } });
-    if (cat) data.categoryId = cat.id;
-  }
-
-  if (data.price !== undefined && data.price <= 0) {
-    throw new Error('Validation: Price must be greater than 0');
-  }
-
-  const product = await prisma.product.update({
-    where: { id: req.params.id },
-    data: {
-      ...data,
-      ...(themeIds !== undefined && {
-        productThemes: {
-          deleteMany: {},
-          create: themeIds.map((id: string) => ({ themeId: id })),
-        },
-      }),
-    },
-    include: {
-      category: true,
-      brand: true,
-      productThemes: { include: { theme: true } },
-    },
-  });
-
-  res.json({
-    ...product,
-    themes: product.productThemes.map((pt) => pt.theme),
-    productThemes: undefined,
-  });
-});
-
-// Soft delete
-router.delete('/products/:id', async (req: Request, res: Response) => {
-  await prisma.product.update({
-    where: { id: req.params.id },
-    data: { isActive: false },
-  });
-  res.json({ message: 'Product deactivated' });
-});
+// Product create/update/delete delegate to the shared controller — single source
+// of truth (incl. theme↔category validation + categoryId auto-resolve). The
+// public /api/products route no longer exposes these mutations (admin-only).
+router.post('/products', createProduct);
+router.put('/products/:id', updateProduct);
+router.delete('/products/:id', deleteProduct);
 
 // ─── Orders ───────────────────────────────────────────────────────────────────
 router.get('/orders', async (_req: Request, res: Response) => {
