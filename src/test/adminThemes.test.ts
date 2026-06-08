@@ -29,6 +29,13 @@ describe('admin themes CRUD', () => {
     expect(res.status).toBe(400);
   });
 
+  it('400s when name is missing', async () => {
+    const cat = await categoryBySlug('watches');
+    const res = await api.post('/api/admin/themes')
+      .set('Authorization', `Bearer ${adminToken()}`).send({ categoryId: cat.id });
+    expect(res.status).toBe(400);
+  });
+
   it('updates a theme', async () => {
     const cat = await categoryBySlug('watches');
     const t = await prisma.theme.create({ data: { name: uid('Thema'), slug: uid('thema'), categoryId: cat.id } });
