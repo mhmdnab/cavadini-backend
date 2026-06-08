@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import prisma from '../lib/prisma';
+import { deriveSlug } from '../lib/slugify';
 
 export const getAllBrands = async (req: Request, res: Response) => {
   const { category } = req.query as { category?: string };
@@ -10,19 +11,11 @@ export const getAllBrands = async (req: Request, res: Response) => {
   res.json(brands);
 };
 
-export function slugify(input: string): string {
-  return input
-    .toLowerCase()
-    .normalize('NFKD').replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
-}
-
 export const createBrand = async (req: Request, res: Response) => {
   const { name, slug, categories } = req.body as { name?: string; slug?: string; categories?: string[] };
   if (!name) throw new Error('Validation: name is required');
   const brand = await prisma.brand.create({
-    data: { name, slug: slug?.trim() || slugify(name), categories: categories ?? [] },
+    data: { name, slug: deriveSlug(name, slug), categories: categories ?? [] },
   });
   res.status(201).json(brand);
 };
@@ -33,7 +26,9 @@ export const updateBrand = async (req: Request, res: Response) => {
     where: { id: req.params.id },
     data: {
       ...(name !== undefined && { name }),
-      ...(slug !== undefined && { slug: slug.trim() || slugify(name ?? '') }),
+      // Only touch slug when the caller sent one; deriveSlug throws (400) rather
+      // than persist an empty string into the @unique slug column.
+      ...(slug !== undefined && { slug: deriveSlug(name, slug) }),
       ...(categories !== undefined && { categories }),
     },
   });

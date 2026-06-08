@@ -46,7 +46,15 @@ describe('admin brands CRUD', () => {
 
   it('deletes an unreferenced brand', async () => {
     const b = await prisma.brand.create({ data: { name: uid('Brand'), slug: uid('brand'), categories: [] } });
+    ids.push(b.id); // safety net: cleaned up by afterAll if the delete regresses
     const res = await api.delete(`/api/admin/brands/${b.id}`).set('Authorization', `Bearer ${adminToken()}`);
     expect(res.status).toBe(200);
+  });
+
+  it('rejects creating a brand whose name yields an empty slug', async () => {
+    const res = await api.post('/api/admin/brands')
+      .set('Authorization', `Bearer ${adminToken()}`)
+      .send({ name: '!!!' });
+    expect(res.status).toBe(400);
   });
 });
