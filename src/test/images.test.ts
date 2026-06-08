@@ -1,7 +1,10 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import fs from 'fs';
+import path from 'path';
 import prisma from '../lib/prisma';
 import { api, adminToken, categoryBySlug } from './helpers';
 
+const uploadsDir = path.join(__dirname, '..', '..', 'public', 'images', 'uploads');
 let productId: string;
 beforeAll(async () => {
   const cat = await categoryBySlug('watches');
@@ -11,6 +14,12 @@ beforeAll(async () => {
   productId = p.id;
 });
 afterAll(async () => {
+  // Remove any files the upload tests wrote to local disk before dropping the row.
+  const prod = await prisma.product.findUnique({ where: { id: productId } });
+  for (const url of prod?.images ?? []) {
+    const f = path.join(uploadsDir, path.basename(url));
+    if (fs.existsSync(f)) fs.unlinkSync(f);
+  }
   await prisma.product.delete({ where: { id: productId } });
 });
 

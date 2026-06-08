@@ -7,9 +7,9 @@ function merge(curated: string[] | undefined, found: string[]): string[] {
 }
 
 export const getFieldOptions = async (_req: Request, res: Response) => {
-  const result: Record<string, string[]> = {};
-
-  for (const field of SCALAR_OPTION_FIELDS) {
+  // This endpoint is called on every admin form load, so run the per-field
+  // queries concurrently rather than sequentially.
+  const scalarTasks = SCALAR_OPTION_FIELDS.map(async (field) => {
     const rows = await prisma.product.findMany({
       where: { [field]: { not: null } } as never,
       distinct: [field] as never,
@@ -18,14 +18,15 @@ export const getFieldOptions = async (_req: Request, res: Response) => {
     const found = rows
       .map((r) => (r as Record<string, unknown>)[field])
       .filter((v): v is string => typeof v === 'string' && v.trim() !== '');
-    result[field] = merge(CURATED[field], found);
-  }
+    return [field, merge(CURATED[field], found)] as const;
+  });
 
-  for (const field of ARRAY_OPTION_FIELDS) {
+  const arrayTasks = ARRAY_OPTION_FIELDS.map(async (field) => {
     const rows = await prisma.product.findMany({ select: { [field]: true } as never });
     const found = rows.flatMap((r) => ((r as Record<string, unknown>)[field] as string[]) ?? []);
-    result[field] = merge(CURATED[field], found.filter((v) => v && v.trim() !== ''));
-  }
+    return [field, merge(CURATED[field], found.filter((v) => v && v.trim() !== ''))] as const;
+  });
 
-  res.json(result);
+  const entries = await Promise.all([...scalarTasks, ...arrayTasks]);
+  res.json(Object.fromEntries(entries) as Record<string, string[]>);
 };

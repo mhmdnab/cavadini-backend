@@ -255,6 +255,25 @@ export const updateProduct = async (req: Request, res: Response) => {
   }
   if (data.isOnSale === false) delete data.originalPrice;
 
+  // Validate themes belong to the product's category (mirrors createProduct).
+  // The effective category is the one being set, or the product's current one.
+  if (themeIds && themeIds.length > 0) {
+    let categoryId: string | undefined = data.categoryId;
+    if (!categoryId) {
+      const existing = await prisma.product.findUnique({
+        where: { id: req.params.id },
+        select: { categoryId: true },
+      });
+      categoryId = existing?.categoryId;
+    }
+    const wrongThemes = await prisma.theme.findMany({
+      where: { id: { in: themeIds }, NOT: { categoryId } },
+    });
+    if (wrongThemes.length > 0) {
+      throw new Error(`Validation: Theme "${wrongThemes[0].name}" does not belong to this product's category`);
+    }
+  }
+
   const product = await prisma.product.update({
     where: { id: req.params.id },
     data: {

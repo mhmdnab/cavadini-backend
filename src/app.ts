@@ -20,9 +20,10 @@ const app = express();
 const allowedOrigins = [
   process.env.CLIENT_URL || 'http://localhost:3000',
   process.env.ADMIN_URL || 'http://localhost:3002',
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'http://localhost:3002',
+  // Dev convenience origins — never trusted in production.
+  ...(process.env.NODE_ENV !== 'production'
+    ? ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002']
+    : []),
 ];
 app.use(cors({ origin: (origin, cb) => cb(null, !origin || allowedOrigins.includes(origin)) }));
 app.use(express.json());

@@ -62,4 +62,20 @@ describe('product route hardening', () => {
       .send({ category_type: 'watches', categoryId: watches.id, name: 'Bad themes', price: 10, themes: [jewelryTheme.id] });
     expect(res.status).toBe(400);
   });
+
+  it('admin PUT /products validates themes against the (existing) category', async () => {
+    const watches = await categoryBySlug('watches');
+    const jewelry = await categoryBySlug('jewelry');
+    const jewelryTheme = await prisma.theme.findFirst({ where: { categoryId: jewelry.id } });
+    if (!jewelryTheme) return; // skip if the cloned DB has no jewelry themes
+    const p = await prisma.product.create({
+      data: { category_type: 'watches', categoryId: watches.id, name: 'Update themes', price: 10 },
+    });
+    createdIds.push(p.id);
+    // update sends NO categoryId — controller must validate against the existing category
+    const res = await api.put(`/api/admin/products/${p.id}`)
+      .set('Authorization', `Bearer ${adminToken()}`)
+      .send({ themes: [jewelryTheme.id] });
+    expect(res.status).toBe(400);
+  });
 });
