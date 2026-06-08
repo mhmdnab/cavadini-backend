@@ -12,6 +12,7 @@ import cartRouter from './routes/cart';
 import ordersRouter from './routes/orders';
 import newsletterRouter from './routes/newsletter';
 import adminRouter from './routes/admin';
+import metaRouter from './routes/meta';
 import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
@@ -36,6 +37,7 @@ app.use('/api/cart', cartRouter);
 app.use('/api/orders', ordersRouter);
 app.use('/api/newsletter', newsletterRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/meta', metaRouter);
 
 app.get('/api/health', (_req: Request, res: Response) => res.json({ status: 'ok' }));
 
