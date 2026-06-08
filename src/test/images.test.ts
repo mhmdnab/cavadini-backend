@@ -37,6 +37,14 @@ describe('product images', () => {
     expect(res.status).toBe(400);
   });
 
+  it('rejects a file larger than the size limit with 400 (not 500)', async () => {
+    const tooBig = Buffer.alloc(5 * 1024 * 1024 + 1024, 1); // > MAX_BYTES (5 MB)
+    const res = await api.post(`/api/admin/products/${productId}/images`)
+      .set('Authorization', `Bearer ${adminToken()}`)
+      .attach('images', tooBig, { filename: 'big.png', contentType: 'image/png' });
+    expect(res.status).toBe(400);
+  });
+
   it('reorders images', async () => {
     const current = (await prisma.product.findUnique({ where: { id: productId } }))!.images;
     const reversed = [...current].reverse();

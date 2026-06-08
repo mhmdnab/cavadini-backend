@@ -1,7 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
 import { Prisma } from '@prisma/client';
+import multer from 'multer';
 
 export const errorHandler = (err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  // Multer upload errors (e.g. file too large) → 400 with a clear message
+  // instead of a misleading 500.
+  if (err instanceof multer.MulterError) {
+    res.status(400).json({ message: err.message });
+    return;
+  }
+
   // Prisma known request errors
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
     switch (err.code) {

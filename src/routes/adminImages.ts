@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { MAX_BYTES } from '../lib/storage';
+import { MAX_BYTES, MAX_IMAGES_PER_UPLOAD } from '../lib/storage';
 import {
   uploadProductImages,
   reorderProductImages,
@@ -10,7 +10,7 @@ import {
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: MAX_BYTES } });
 
 const router = Router();
-router.post('/products/:id/images', upload.array('images', 12), uploadProductImages);
+router.post('/products/:id/images', upload.array('images', MAX_IMAGES_PER_UPLOAD), uploadProductImages);
 router.put('/products/:id/images', reorderProductImages);
 router.delete('/products/:id/images', deleteProductImage);
 

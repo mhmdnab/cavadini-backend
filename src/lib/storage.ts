@@ -16,6 +16,7 @@ const EXT_BY_MIME: Record<string, string> = {
 
 export const ALLOWED_MIME = new Set(Object.keys(EXT_BY_MIME));
 export const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+export const MAX_IMAGES_PER_UPLOAD = 12;
 
 const driver = () => process.env.STORAGE_DRIVER || 'local';
 const BUCKET = process.env.SUPABASE_BUCKET || 'products';

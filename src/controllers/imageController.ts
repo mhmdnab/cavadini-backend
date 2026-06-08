@@ -11,6 +11,21 @@ async function getProductOr404(id: string, res: Response) {
   return product;
 }
 
+/** True when both arrays contain the same values with the same multiplicities,
+ *  regardless of order. Robust to duplicate URLs and separator characters
+ *  (unlike a sort-and-join comparison). */
+function sameMultiset(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false;
+  const counts = new Map<string, number>();
+  for (const x of a) counts.set(x, (counts.get(x) ?? 0) + 1);
+  for (const x of b) {
+    const c = counts.get(x);
+    if (!c) return false;
+    counts.set(x, c - 1);
+  }
+  return true;
+}
+
 export const uploadProductImages = async (req: Request, res: Response) => {
   const product = await getProductOr404(req.params.id, res);
   if (!product) return;
@@ -28,8 +43,15 @@ export const uploadProductImages = async (req: Request, res: Response) => {
   }
 
   const newUrls: string[] = [];
-  for (const f of files) {
-    newUrls.push(await uploadImage({ buffer: f.buffer, originalname: f.originalname, mimetype: f.mimetype }));
+  try {
+    for (const f of files) {
+      newUrls.push(await uploadImage({ buffer: f.buffer, originalname: f.originalname, mimetype: f.mimetype }));
+    }
+  } catch (err) {
+    // Roll back any files already uploaded so a mid-batch failure doesn't orphan
+    // objects in storage with no DB reference.
+    await Promise.all(newUrls.map((u) => deleteImage(u).catch(() => undefined)));
+    throw err;
   }
 
   const updated = await prisma.product.update({
@@ -48,10 +70,7 @@ export const reorderProductImages = async (req: Request, res: Response) => {
     res.status(400).json({ message: 'images must be an array' });
     return;
   }
-  const same =
-    images.length === product.images.length &&
-    [...images].sort().join('|') === [...product.images].sort().join('|');
-  if (!same) {
+  if (!sameMultiset(images, product.images)) {
     res.status(400).json({ message: 'images must be a reordering of the existing images' });
     return;
   }
@@ -64,13 +83,16 @@ export const deleteProductImage = async (req: Request, res: Response) => {
   const product = await getProductOr404(req.params.id, res);
   if (!product) return;
 
-  const url = (req.body?.url ?? req.query.url) as string | undefined;
+  const url = (req.body?.url) as string | undefined;
   if (!url || !product.images.includes(url)) {
     res.status(400).json({ message: 'url must be one of the product images' });
     return;
   }
 
-  await deleteImage(url).catch(() => undefined); // best-effort object removal
+  // Two-step (storage delete, then DB update) without a transaction: delete the
+  // stored object best-effort first; if the DB update below fails the worst case
+  // is an orphaned object, never a dangling reference.
+  await deleteImage(url).catch(() => undefined);
   const updated = await prisma.product.update({
     where: { id: product.id },
     data: { images: product.images.filter((u) => u !== url) },
