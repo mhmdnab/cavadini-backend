@@ -35,6 +35,9 @@ export const updateCategory = async (req: Request, res: Response) => {
     data: {
       ...(name !== undefined && { name }),
       ...(nameEn !== undefined && { nameEn }),
+      // Only touch slug when the caller sent one; deriveSlug throws (400) rather
+      // than persist an empty string. Re-deriving from the stored name requires
+      // resending `name` in the same request.
       ...(slug !== undefined && { slug: deriveSlug(name, slug) }),
     },
   });
