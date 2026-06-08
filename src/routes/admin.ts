@@ -4,12 +4,14 @@ import adminMiddleware from '../middleware/admin';
 import adminImagesRouter from './adminImages';
 import adminBrandsRouter from './adminBrands';
 import adminCategoriesRouter from './adminCategories';
+import adminThemesRouter from './adminThemes';
 
 const router = Router();
 router.use(adminMiddleware);
 router.use(adminImagesRouter);
 router.use('/brands', adminBrandsRouter);
 router.use('/categories', adminCategoriesRouter);
+router.use('/themes', adminThemesRouter);
 
 // ─── Stats ────────────────────────────────────────────────────────────────────
 router.get('/stats', async (_req: Request, res: Response) => {
