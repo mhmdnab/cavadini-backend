@@ -9,8 +9,9 @@ describe('GET /api/meta/field-options', () => {
   it('returns option lists including distinct DB values', async () => {
     const cat = await categoryBySlug('watches');
     const marker = uid('Color');
+    const styleMarker = uid('Style');
     const p = await prisma.product.create({
-      data: { category_type: 'watches', categoryId: cat.id, name: 'FO', price: 10, dialColor: marker, styles: [uid('Style')] },
+      data: { category_type: 'watches', categoryId: cat.id, name: 'FO', price: 10, dialColor: marker, styles: [styleMarker] },
     });
     productId = p.id;
 
@@ -19,6 +20,7 @@ describe('GET /api/meta/field-options', () => {
     expect(Array.isArray(res.body.dialColor)).toBe(true);
     expect(res.body.dialColor).toContain(marker);
     expect(Array.isArray(res.body.styles)).toBe(true);
+    expect(res.body.styles).toContain(styleMarker); // array-field flattening is verified by content, not just shape
     expect(res.body.movement).toBeDefined(); // present even if empty
   });
 });
