@@ -2,10 +2,12 @@ import { Router, Request, Response } from 'express';
 import prisma from '../lib/prisma';
 import adminMiddleware from '../middleware/admin';
 import adminImagesRouter from './adminImages';
+import adminBrandsRouter from './adminBrands';
 
 const router = Router();
 router.use(adminMiddleware);
 router.use(adminImagesRouter);
+router.use('/brands', adminBrandsRouter);
 
 // ─── Stats ────────────────────────────────────────────────────────────────────
 router.get('/stats', async (_req: Request, res: Response) => {
