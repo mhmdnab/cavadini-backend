@@ -38,24 +38,40 @@ router.get('/stats', async (_req: Request, res: Response) => {
 });
 
 // ─── Products ─────────────────────────────────────────────────────────────────
-router.get('/products', async (_req: Request, res: Response) => {
-  const products = await prisma.product.findMany({
-    where: { isActive: true },
-    orderBy: { createdAt: 'desc' },
-    include: {
-      category: true,
-      brand: true,
-      productThemes: { include: { theme: true } },
-    },
+router.get('/products', async (req: Request, res: Response) => {
+  const { search, category_type, includeInactive, page: pageParam, limit: limitParam } =
+    req.query as Record<string, string | undefined>;
+
+  const where: Record<string, unknown> = {};
+  if (includeInactive !== 'true') where.isActive = true;
+  if (category_type) where.category_type = category_type;
+  if (search) {
+    where.OR = [
+      { name: { contains: search, mode: 'insensitive' } },
+      { nameEn: { contains: search, mode: 'insensitive' } },
+      { referenceNumber: { contains: search, mode: 'insensitive' } },
+      { articleNumber: { contains: search, mode: 'insensitive' } },
+    ];
+  }
+
+  const page = Math.max(1, Number(pageParam) || 1);
+  const limit = Math.min(100, Math.max(1, Number(limitParam) || 20));
+
+  const [products, total] = await Promise.all([
+    prisma.product.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
+      include: { category: true, brand: true, productThemes: { include: { theme: true } } },
+    }),
+    prisma.product.count({ where }),
+  ]);
+
+  res.json({
+    products: products.map((p) => ({ ...p, themes: p.productThemes.map((pt) => pt.theme), productThemes: undefined })),
+    pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
   });
-
-  const transformed = products.map((p) => ({
-    ...p,
-    themes: p.productThemes.map((pt) => pt.theme),
-    productThemes: undefined,
-  }));
-
-  res.json(transformed);
 });
 
 router.post('/products', async (req: Request, res: Response) => {
