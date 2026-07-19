@@ -32,9 +32,14 @@ export const errorHandler = (err: Error, _req: Request, res: Response, _next: Ne
     }
   }
 
-  // Prisma validation errors (wrong type passed to client)
+  // Prisma validation errors (wrong type passed to client). The raw message
+  // dumps the query shape, field types and internal IDs, so only expose it
+  // outside production — production callers get a generic message.
   if (err instanceof Prisma.PrismaClientValidationError) {
-    res.status(400).json({ message: 'Validation error', details: err.message });
+    res.status(400).json({
+      message: 'Validation error',
+      ...(process.env.NODE_ENV !== 'production' && { details: err.message }),
+    });
     return;
   }
 
