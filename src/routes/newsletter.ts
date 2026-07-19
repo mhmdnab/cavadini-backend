@@ -1,10 +1,11 @@
 import { Router, Request, Response } from 'express';
 import prisma from '../lib/prisma';
+import { sensitiveLimiter } from '../middleware/rateLimit';
 
 const router = Router();
 
 // POST /api/newsletter/subscribe
-router.post('/subscribe', async (req: Request, res: Response) => {
+router.post('/subscribe', sensitiveLimiter, async (req: Request, res: Response) => {
   try {
     const { email } = req.body as { email?: string };
     if (!email) {

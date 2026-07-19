@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '../lib/prisma';
 import authMiddleware from '../middleware/auth';
+import { loginLimiter, sensitiveLimiter } from '../middleware/rateLimit';
 
 const router = Router();
 
@@ -14,7 +15,7 @@ const signToken = (user: { id: string; email: string; isAdmin: boolean }): strin
   );
 
 // POST /api/auth/register
-router.post('/register', async (req: Request, res: Response) => {
+router.post('/register', sensitiveLimiter, async (req: Request, res: Response) => {
   try {
     const { name, email, password } = req.body as { name?: string; email?: string; password?: string };
     if (!name || !email || !password) {
@@ -41,7 +42,7 @@ router.post('/register', async (req: Request, res: Response) => {
 });
 
 // POST /api/auth/login
-router.post('/login', async (req: Request, res: Response) => {
+router.post('/login', loginLimiter, async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body as { email?: string; password?: string };
     if (!email || !password) {
