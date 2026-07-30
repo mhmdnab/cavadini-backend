@@ -175,14 +175,30 @@ export const getProducts = async (req: Request, res: Response) => {
   });
 };
 
+const PRODUCT_INCLUDE = {
+  category: true,
+  brand: true,
+  productThemes: { include: { theme: true } },
+} as const;
+
+type ProductWithRelations = Prisma.ProductGetPayload<{ include: typeof PRODUCT_INCLUDE }>;
+
+/** Flattens the productThemes junction into a plain `themes` array. */
+function shapeProduct(product: ProductWithRelations) {
+  return {
+    ...product,
+    themes: product.productThemes.map((pt) => pt.theme),
+    productThemes: undefined,
+  };
+}
+
+// Public: only active products. Inactive/soft-deleted products must not be
+// readable by id without admin auth — otherwise anyone holding a UUID can read
+// a draft or discontinued product's name and price.
 export const getProductById = async (req: Request, res: Response) => {
-  const product = await prisma.product.findUnique({
-    where: { id: req.params.id },
-    include: {
-      category: true,
-      brand: true,
-      productThemes: { include: { theme: true } },
-    },
+  const product = await prisma.product.findFirst({
+    where: { id: req.params.id, isActive: true },
+    include: PRODUCT_INCLUDE,
   });
 
   if (!product) {
@@ -190,12 +206,33 @@ export const getProductById = async (req: Request, res: Response) => {
     return;
   }
 
-  res.json({
-    ...product,
-    themes: product.productThemes.map((pt) => pt.theme),
-    productThemes: undefined,
-  });
+  res.json(shapeProduct(product));
 };
+
+// Admin: any product regardless of isActive, so the dashboard can open drafts
+// and deactivated products for editing.
+export const getProductByIdAdmin = async (req: Request, res: Response) => {
+  const product = await prisma.product.findUnique({
+    where: { id: req.params.id },
+    include: PRODUCT_INCLUDE,
+  });
+
+  if (!product) {
+    res.status(404).json({ message: 'Product not found' });
+    return;
+  }
+
+  res.json(shapeProduct(product));
+};
+
+// System-generated article number (item 6): "KO-" + zero-padded sequence value.
+// Backed by the Postgres sequence `article_number_seq`, so it's atomic under
+// concurrent creates and never collides. Deliberately NOT the eBay number.
+async function nextArticleNumber(): Promise<string> {
+  const rows = await prisma.$queryRaw<{ nextval: bigint }[]>`SELECT nextval('article_number_seq')`;
+  const n = Number(rows[0].nextval);
+  return `KO-${String(n).padStart(5, '0')}`;
+}
 
 export const createProduct = async (req: Request, res: Response) => {
   const { themes: themeIds, ...data } = req.body;
@@ -205,6 +242,10 @@ export const createProduct = async (req: Request, res: Response) => {
     const cat = await prisma.category.findFirst({ where: { slug: data.category_type } });
     if (cat) data.categoryId = cat.id;
   }
+
+  // Article number is always system-assigned on create — any client value is
+  // ignored so it can never be set to the eBay number.
+  data.articleNumber = await nextArticleNumber();
 
   // Validation (replaces pre-save hooks)
   if (data.price <= 0) throw new Error('Validation: Price must be greater than 0');
@@ -244,7 +285,12 @@ export const createProduct = async (req: Request, res: Response) => {
 export const updateProduct = async (req: Request, res: Response) => {
   const { themes: themeIds, ...data } = req.body;
 
-  // Auto-resolve categoryId from category_type if not supplied (matches create)
+  // Article number is system-owned; never editable via update.
+  delete data.articleNumber;
+
+  // Auto-resolve categoryId from category_type if not supplied (matches create).
+  // This also handles a product-type change (item 8): switching category_type
+  // re-points categoryId to the new type's category so it moves collections.
   if (!data.categoryId && data.category_type) {
     const cat = await prisma.category.findFirst({ where: { slug: data.category_type } });
     if (cat) data.categoryId = cat.id;
@@ -305,4 +351,56 @@ export const deleteProduct = async (req: Request, res: Response) => {
     data: { isActive: false },
   });
   res.json({ message: 'Product deactivated' });
+};
+
+// Duplicate a product (item 7): copies every field except id/timestamps, gives
+// it a fresh article number, drops the images (to be replaced), appends
+// " (Kopie)" to the name, and leaves it inactive until the admin finishes.
+// Themes are copied so the variant keeps its taxonomy.
+export const duplicateProduct = async (req: Request, res: Response) => {
+  const source = await prisma.product.findUnique({
+    where: { id: req.params.id },
+    include: { productThemes: true },
+  });
+  if (!source) {
+    res.status(404).json({ message: 'Product not found' });
+    return;
+  }
+
+  const {
+    id: _id,
+    createdAt: _c,
+    updatedAt: _u,
+    articleNumber: _a,
+    productThemes,
+    ...rest
+  } = source as typeof source & Record<string, unknown>;
+  void _id;
+  void _c;
+  void _u;
+  void _a;
+
+  const copy = await prisma.product.create({
+    data: {
+      ...rest,
+      name: `${source.name} (Kopie)`,
+      articleNumber: await nextArticleNumber(),
+      images: [],
+      isActive: false,
+      productThemes: {
+        create: productThemes.map((pt) => ({ themeId: pt.themeId })),
+      },
+    },
+    include: {
+      category: true,
+      brand: true,
+      productThemes: { include: { theme: true } },
+    },
+  });
+
+  res.status(201).json({
+    ...copy,
+    themes: copy.productThemes.map((pt) => pt.theme),
+    productThemes: undefined,
+  });
 };

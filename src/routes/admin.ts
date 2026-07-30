@@ -6,7 +6,13 @@ import adminImagesRouter from './adminImages';
 import adminBrandsRouter from './adminBrands';
 import adminCategoriesRouter from './adminCategories';
 import adminThemesRouter from './adminThemes';
-import { createProduct, updateProduct, deleteProduct } from '../controllers/productController';
+import {
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  getProductByIdAdmin,
+  duplicateProduct,
+} from '../controllers/productController';
 
 const router = Router();
 router.use(adminMiddleware);
@@ -79,7 +85,9 @@ router.get('/products', async (req: Request, res: Response) => {
 // Product create/update/delete delegate to the shared controller — single source
 // of truth (incl. theme↔category validation + categoryId auto-resolve). The
 // public /api/products route no longer exposes these mutations (admin-only).
+router.get('/products/:id', getProductByIdAdmin);
 router.post('/products', createProduct);
+router.post('/products/:id/duplicate', duplicateProduct);
 router.put('/products/:id', updateProduct);
 router.delete('/products/:id', deleteProduct);
 

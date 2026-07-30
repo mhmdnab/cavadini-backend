@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node dist/index.js",
     "dev": "nodemon --exec ts-node src/index.ts",
+    "dev:local": "dotenv -e .env.development -- nodemon --exec ts-node src/index.ts",
     "build": "prisma generate && prisma migrate deploy && tsc",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",

@@ -63,6 +63,48 @@ describe('product route hardening', () => {
     expect(res.status).toBe(400);
   });
 
+  it('public GET /api/products/:id does not expose inactive products', async () => {
+    const cat = await categoryBySlug('watches');
+    const p = await prisma.product.create({
+      data: { category_type: 'watches', categoryId: cat.id, name: 'Hidden draft', price: 10, isActive: false },
+    });
+    createdIds.push(p.id);
+
+    const res = await api.get(`/api/products/${p.id}`);
+    expect(res.status).toBe(404);
+  });
+
+  it('public GET /api/products/:id still serves active products', async () => {
+    const cat = await categoryBySlug('watches');
+    const p = await prisma.product.create({
+      data: { category_type: 'watches', categoryId: cat.id, name: 'Visible product', price: 10 },
+    });
+    createdIds.push(p.id);
+
+    const res = await api.get(`/api/products/${p.id}`);
+    expect(res.status).toBe(200);
+    expect(res.body.id).toBe(p.id);
+  });
+
+  it('admin GET /api/admin/products/:id returns inactive products', async () => {
+    const cat = await categoryBySlug('watches');
+    const p = await prisma.product.create({
+      data: { category_type: 'watches', categoryId: cat.id, name: 'Draft for admin', price: 10, isActive: false },
+    });
+    createdIds.push(p.id);
+
+    const res = await api.get(`/api/admin/products/${p.id}`)
+      .set('Authorization', `Bearer ${adminToken()}`);
+    expect(res.status).toBe(200);
+    expect(res.body.id).toBe(p.id);
+    expect(res.body.isActive).toBe(false);
+  });
+
+  it('admin GET /api/admin/products/:id requires admin auth', async () => {
+    const anon = await api.get('/api/admin/products/whatever');
+    expect(anon.status).toBe(401);
+  });
+
   it('admin PUT /products validates themes against the (existing) category', async () => {
     const watches = await categoryBySlug('watches');
     const jewelry = await categoryBySlug('jewelry');

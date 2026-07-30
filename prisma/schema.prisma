@@ -48,6 +48,10 @@ model Brand {
   name       String    @unique
   slug       String    @unique
   categories String[]
+  // Sidebar ordering + visibility for the MARKEN section (item 1/2). Additive
+  // with safe defaults; brands render active-first, ordered by sortOrder then name.
+  sortOrder  Int       @default(0)
+  isActive   Boolean   @default(true)
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
 
@@ -65,6 +69,11 @@ model Theme {
   slug       String
   nameEn     String?
   categoryId String
+  // Sidebar ordering + visibility (item 1/2). Additive with safe defaults so
+  // existing rows keep working; the storefront THEMEN sidebar renders active
+  // themes ordered by sortOrder.
+  sortOrder  Int      @default(0)
+  isActive   Boolean  @default(true)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -73,6 +82,7 @@ model Theme {
 
   @@index([categoryId])
   @@index([slug])
+  @@index([categoryId, sortOrder])
   @@map("themes")
 }
 
@@ -97,6 +107,12 @@ model Product {
   stockQuantity   Int     @default(0)
   isActive        Boolean @default(true)
   isSecondHand    Boolean @default(false)
+  // Condition (item 10). Replaces the used/new boolean for legal compliance
+  // (most stock is NOS / Lagerware). `isSecondHand` kept above as a readable
+  // fallback. `condition` holds a canonical key (Neu | Lagerware/NOS | Gebraucht);
+  // `conditionDetails` is optional free German text per item.
+  condition        String?
+  conditionDetails String?
 
   // Compliance
   warningNotForChildrenUnder3 Boolean @default(false)
@@ -140,6 +156,9 @@ model Product {
   caseThicknessMm         Float?
   lugWidthMm              Float?
   maxWristCircumferenceMm Float?
+  // Max wrist circumference in cm (item 3). The mm column above is kept as a
+  // readable fallback; entry + display now use cm.
+  maxWristCircumferenceCm Float?
 
   // Strap-specific (material, color, clasp, lugWidthMm shared above)
   fitting      String?
