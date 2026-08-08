@@ -14,6 +14,10 @@ export const ARRAY_OPTION_FIELDS = ['functions', 'styles'] as const;
 // Curated base values guaranteed to appear even when no product uses them yet.
 // Distinct DB values are merged on top, so custom entries still surface.
 export const CURATED: Record<string, string[]> = {
+  // Item 6 — Geschlecht. Canonical (English) stored values; the dashboard Select
+  // localizes them to Herren/Damen/Unisex/Kinder. "Unisex" was previously never
+  // offered (no product used it, so it never appeared as a distinct DB value).
+  gender: ['Men', 'Women', 'Unisex', 'Children'],
   // Item 4 — Uhrenform (case shape). Empty until now because no product had a value.
   watchShape: ['Rund', 'Quadrat', 'Rechteck', 'Oval', 'Tonneau', 'Spitzeck', 'Assymetrisch'],
   // Item 5 — allowed Style values (multi-select, max 3 enforced client-side).

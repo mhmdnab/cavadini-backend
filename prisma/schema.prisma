@@ -100,6 +100,10 @@ model Product {
   nameEn          String?
   description     String?
   descriptionEn   String?
+  // Item 12: long-form story-telling / history text (HTML), separate from and in
+  // addition to `description`. Optional; bilingual like the other content fields.
+  storyText       String? @db.Text
+  storyTextEn     String? @db.Text
   price           Float
   originalPrice   Float?
   currency        String  @default("EUR")
@@ -151,7 +155,9 @@ model Product {
   functions               String[]
   styles                  String[]
   caliber                 String?
-  yearOfManufacture       Int?
+  // Item 7: production PERIOD text, e.g. "1990 - 1999" (was Int). Existing numeric
+  // values are migrated to their string form, so no data is lost.
+  yearOfManufacture       String?
   diameterMm              Float?
   caseThicknessMm         Float?
   lugWidthMm              Float?
